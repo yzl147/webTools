@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件转换与翻译工具</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        .tab-group {
+            display: flex;
+            border-bottom: 2px solid #e0e0e0;
+            margin-bottom: 20px;
+        }
+        .tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            color: #666;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+        }
+        .tab.active {
+            color: #007bff;
+            border-bottom-color: #007bff;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: #333;
+            font-weight: 500;
+        }
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        select, input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .section {
+            display: none;
+        }
+        .section.active {
+            display: block;
+        }
+        .mode-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .mode-btn {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            background: #f8f8f8;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .mode-btn.active {
+            border-color: #007bff;
+            background: #e7f1ff;
+            color: #007bff;
+        }
+        .config-section {
+            background: #f8f9fa;
+            padding: 16px;
+            border-radius: 4px;
+            margin-top: 12px;
+        }
+        .config-section h4 {
+            margin-bottom: 12px;
+            color: #333;
+        }
+        .row {
+            display: flex;
+            gap: 12px;
+        }
+        .row .form-group {
+            flex: 1;
+        }
+        .status {
+            text-align: center;
+            padding: 12px;
+            margin-top: 16px;
+            border-radius: 4px;
+            display: none;
+        }
+        .status.loading {
+            display: block;
+            background: #e7f1ff;
+            color: #0056b3;
+        }
+        .status.success {
+            display: block;
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            display: block;
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>文件转换与翻译工具</h1>
+
+        <div class="card">
+            <div class="tab-group">
+                <div class="tab active" data-tab="convert">格式转换</div>
+                <div class="tab" data-tab="translate">文件翻译</div>
+            </div>
+
+            <!-- 格式转换 -->
+            <div id="convert-section" class="section active">
+                <div class="form-group">
+                    <label>选择文件</label>
+                    <input type="file" id="convert-file" accept=".pdf,.docx,.md">
+                </div>
+                <div class="form-group">
+                    <label>目标格式</label>
+                    <select id="target-format">
+                        <option value="pdf">PDF</option>
+                        <option value="docx">DOCX</option>
+                        <option value="md">Markdown</option>
+                    </select>
+                </div>
+                <button class="btn" id="convert-btn">开始转换</button>
+            </div>
+
+            <!-- 文件翻译 -->
+            <div id="translate-section" class="section">
+                <div class="form-group">
+                    <label>选择文件</label>
+                    <input type="file" id="translate-file" accept=".pdf,.docx,.md">
+                </div>
+                <div class="form-group">
+                    <label>翻译模式</label>
+                    <div class="mode-selector">
+                        <div class="mode-btn active" data-mode="libretranslate">LibreTranslate</div>
+                        <div class="mode-btn" data-mode="llm">大模型翻译</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>目标语言</label>
+                    <select id="target-language">
+                        <option value="en">英语</option>
+                        <option value="zh">中文</option>
+                        <option value="es">西班牙语</option>
+                        <option value="fr">法语</option>
+                        <option value="de">德语</option>
+                        <option value="ja">日语</option>
+                        <option value="ko">韩语</option>
+                        <option value="ru">俄语</option>
+                        <option value="ar">阿拉伯语</option>
+                    </select>
+                </div>
+
+                <!-- LibreTranslate 配置 -->
+                <div id="libretranslate-config" class="config-section">
+                    <h4>LibreTranslate 配置</h4>
+                    <div class="row">
+                        <div class="form-group">
+                            <label>主机</label>
+                            <input type="text" id="lt-host" placeholder="localhost">
+                        </div>
+                        <div class="form-group">
+                            <label>端口</label>
+                            <input type="number" id="lt-port" placeholder="5000" value="5000">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>API Key (可选)</label>
+                        <input type="text" id="lt-api-key" placeholder="可选">
+                    </div>
+                </div>
+
+                <!-- LLM 配置 -->
+                <div id="llm-config" class="config-section" style="display: none;">
+                    <h4>大模型翻译配置</h4>
+                    <div class="form-group">
+                        <label>模型类型</label>
+                        <select id="llm-type">
+                            <option value="openai">OpenAI (GPT)</option>
+                            <option value="anthropic">Anthropic (Claude)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>API 地址</label>
+                        <input type="text" id="api-base" placeholder="https://api.openai.com/v1 (OpenAI) 或留空">
+                    </div>
+                    <div class="form-group">
+                        <label>API Key</label>
+                        <input type="text" id="api-key" placeholder="必填">
+                    </div>
+                    <div class="form-group">
+                        <label>模型名称</label>
+                        <input type="text" id="model" placeholder="如: gpt-4, claude-3-opus-20240229">
+                    </div>
+                </div>
+
+                <button class="btn" id="translate-btn">开始翻译</button>
+            </div>
+
+            <div id="status" class="status"></div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab + '-section').classList.add('active');
+            });
+        });
+
+        // Mode switching
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const mode = btn.dataset.mode;
+                document.getElementById('libretranslate-config').style.display = mode === 'libretranslate' ? 'block' : 'none';
+                document.getElementById('llm-config').style.display = mode === 'llm' ? 'block' : 'none';
+            });
+        });
+
+        // Convert button
+        document.getElementById('convert-btn').addEventListener('click', async () => {
+            const fileInput = document.getElementById('convert-file');
+            const targetFormat = document.getElementById('target-format').value;
+            const statusEl = document.getElementById('status');
+
+            if (!fileInput.files[0]) {
+                showStatus('error', '请选择文件');
+                return;
+            }
+
+            showStatus('loading', '转换中...');
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('target_format', targetFormat);
+
+            try {
+                const response = await fetch('/api/convert', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || '转换失败');
+                }
+
+                const blob = await response.blob();
+                const contentDisposition = response.headers.get('Content-Disposition');
+                let filename = `converted.${targetFormat}`;
+                if (contentDisposition) {
+                    const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+                    if (match) filename = match[1].replace(/['"]/g, '');
+                }
+
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(url);
+
+                showStatus('success', '转换成功！');
+            } catch (error) {
+                showStatus('error', error.message);
+            }
+        });
+
+        // Translate button
+        document.getElementById('translate-btn').addEventListener('click', async () => {
+            const fileInput = document.getElementById('translate-file');
+            const mode = document.querySelector('.mode-btn.active').dataset.mode;
+            const targetLanguage = document.getElementById('target-language').value;
+            const statusEl = document.getElementById('status');
+
+            if (!fileInput.files[0]) {
+                showStatus('error', '请选择文件');
+                return;
+            }
+
+            if (mode === 'llm') {
+                const apiKey = document.getElementById('api-key').value;
+                const model = document.getElementById('model').value;
+                if (!apiKey || !model) {
+                    showStatus('error', 'API Key 和模型名称必填');
+                    return;
+                }
+            }
+
+            showStatus('loading', '翻译中，请稍候...');
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('mode', mode);
+            formData.append('target_language', targetLanguage);
+
+            if (mode === 'libretranslate') {
+                formData.append('lt_host', document.getElementById('lt-host').value || 'localhost');
+                formData.append('lt_port', document.getElementById('lt-port').value || '5000');
+                const apiKey = document.getElementById('lt-api-key').value;
+                if (apiKey) formData.append('lt_api_key', apiKey);
+            } else {
+                formData.append('llm_type', document.getElementById('llm-type').value);
+                const apiBase = document.getElementById('api-base').value;
+                if (apiBase) formData.append('api_base', apiBase);
+                formData.append('api_key', document.getElementById('api-key').value);
+                formData.append('model', document.getElementById('model').value);
+            }
+
+            try {
+                const response = await fetch('/api/translate', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || '翻译失败');
+                }
+
+                const blob = await response.blob();
+                const contentDisposition = response.headers.get('Content-Disposition');
+                let filename = `translated.${fileInput.files[0].name.split('.').pop()}`;
+                if (contentDisposition) {
+                    const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+                    if (match) filename = match[1].replace(/['"]/g, '');
+                }
+
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(url);
+
+                showStatus('success', '翻译成功！');
+            } catch (error) {
+                showStatus('error', error.message);
+            }
+        });
+
+        function showStatus(type, message) {
+            const statusEl = document.getElementById('status');
+            statusEl.className = 'status ' + type;
+            statusEl.textContent = message;
+        }
+    </script>
+</body>
+</html>
